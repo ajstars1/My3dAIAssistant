@@ -4,12 +4,10 @@ import AITalkingMan from '@/components/pageRender'
 import "./App.scss";
 import { LiveAPIProvider } from '@/contexts/LiveAPIContext';
 import React, { useRef, useState } from 'react'
-import SidePanel from '@/components/side-panel/SidePanel';
 
 const Page = () => {
 
 const API_KEY = process.env.NEXT_PUBLIC_REACT_APP_GEMINI_API_KEY as string;
-// console.log(API_KEY);
 
 if (typeof API_KEY !== "string") {
   throw new Error("set REACT_APP_GEMINI_API_KEY in .env");
@@ -23,8 +21,6 @@ const uri = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeSer
 
   return (
     <LiveAPIProvider url={uri} apiKey={API_KEY}>
-      {/* <div className="streaming-console">
-          <SidePanel /> */}
       <AITalkingMan />
       <ControlTray
         videoRef={videoRef}
@@ -33,7 +29,6 @@ const uri = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeSer
       >
         {/* put your own buttons here */}
       </ControlTray>
-      {/* </div> */}
     </LiveAPIProvider>
   );
 }

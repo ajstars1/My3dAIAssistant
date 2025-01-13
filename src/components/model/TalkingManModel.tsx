@@ -41,9 +41,9 @@ export function TalkingManModel({ play }: TalkingManModelProps) {
       <group name="Scene">
         <group
           name="Sketchfab_model"
-          position={[-0.0068, -0.007, -0.0042]}
-          rotation={[-Math.PI / 2, 0, 0.3129]}
-          scale={0.9416}
+          position={[-0.0068, -0.6, -0.0042]} // Adjusted y position for "down"
+          rotation={[-Math.PI / 2, 0, 0]} // Removed rotation on y and z axes
+          scale={1.2}
         >
           <group name="root">
             <group name="GLTF_SceneRootNode" rotation={[Math.PI / 2, 0, 0]}>

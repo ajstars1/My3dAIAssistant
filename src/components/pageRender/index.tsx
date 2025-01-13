@@ -206,7 +206,7 @@ export default function AITalkingMan() {
         <ambientLight intensity={1} />
         <pointLight position={[10, 10, 10]} />
         <TalkingManModel play={isPlaying} />
-        <OrbitControls />
+        <OrbitControls  />
       </Canvas>
       {/* ... rest of your UI components ... */}
     </div>

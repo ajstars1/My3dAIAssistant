@@ -1,3 +1,6 @@
+import { ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 export type AudioContextConfig = AudioContextOptions & {
   contextId?: string;
 };
@@ -94,4 +97,10 @@ export function decodeBase64ToArrayBuffer(base64: string): ArrayBuffer {
     // Return an empty buffer or re-throw, depending on desired error handling
     return new ArrayBuffer(0);
   }
+}
+
+
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }

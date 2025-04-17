@@ -67,11 +67,7 @@ README.md               # This file
     *   Create a `.env.local` file in the root directory.
     *   Add your API key for the multimodal service:
         ```
-        NEXT_PUBLIC_API_KEY=YOUR_API_KEY_HERE
-        ```
-    *   *(Optional)* If your service runs on a different WebSocket URL, add:
-        ```
-        NEXT_PUBLIC_WS_URI=YOUR_WEBSOCKET_URL_HERE
+        GEMINI_API_KEY=YOUR_API_KEY_HERE
         ```
 5.  **Run the development server:**
     ```bash

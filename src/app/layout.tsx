@@ -7,7 +7,7 @@ import { Analytics } from "@vercel/analytics/react"
 const inter = Inter({ 
   subsets: ['latin'],
   display: 'swap', // Improves initial page load by showing fallback font until Inter loads
-  preload: true,
+  preload: false,
 });
 
 export const metadata: Metadata = {

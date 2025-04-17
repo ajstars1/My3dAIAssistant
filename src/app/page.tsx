@@ -1,17 +1,5 @@
 import ClientWrapper from '@/components/ClientWrapper';
 
-// Simple loading component - can be kept here or moved
-// For simplicity, keeping it here, but could be in ClientWrapper too.
-function LoadingFallback() {
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="h-[40rem] flex items-center justify-center">
-       {/* Ensure LoadingEffect is correctly imported or defined */}
-       <p>Loading...</p> {/* Placeholder if LoadingEffect is moved */}
-      </div>
-    </div>
-  );
-}
 
 // This remains a Server Component
 export default function Page() {

@@ -1,9 +1,13 @@
 import { type Part } from "@google/generative-ai";
 
+// Define the available voice names as a type
+type VoiceName = "Puck" | "Charon" | "Kore" | "Fenrir" | "Aoede";
+
 export interface Persona {
   id: string;
   name: string;
   systemInstruction: { parts: Part[] };
+  voiceName: VoiceName;
 }
 
 // // Base instructions common to all personas (adapt as needed)
@@ -13,6 +17,7 @@ export const personas: Persona[] = [
   {
     id: "default",
     name: "Default Assistant",
+    voiceName: "Aoede",
     systemInstruction: {
       parts: [
         {
@@ -89,6 +94,7 @@ Here is information about **0Unveiled**, a platform developed by Ayush's team (S
   {
     id: "business_advisor",
     name: "Business Mentor",
+    voiceName: "Charon",
     systemInstruction: {
       parts: [
         {
@@ -143,6 +149,7 @@ Your ultimate goal is to provide insightful, impactful, and memorable responses 
   {
     id: "technical_recruiter",
     name: "Technical Expert",
+    voiceName: "Puck",
     systemInstruction: {
       parts: [
         {
@@ -177,6 +184,7 @@ Your ultimate goal is to act as a trusted, experienced technical advisor. Provid
   {
     id: "ai_pandit",
     name: "Astro Talk Expert",
+    voiceName: "Kore",
     systemInstruction: {
       parts: [
         {

@@ -54,9 +54,10 @@ export const LiveAPIProvider: FC<LiveAPIProviderProps> = ({
       model: sessionConfigOverrides.model || "models/gemini-2.0-flash-live-001", // Ensure model is always present
       ...sessionConfigOverrides, // Spread overrides (potentially overwriting model again if present)
       systemInstruction: selectedPersona.systemInstruction,
+      // Use the voiceName from the selected persona
       voiceConfig: {
         prebuiltVoiceConfig: {
-          voiceName: "Aoede"
+          voiceName: selectedPersona.voiceName // Use dynamic voice name
         }
       }
     };

@@ -32,6 +32,11 @@ const PersonaSidebar = () => {
               disabled={isConnecting || selectedPersona.id === persona.id}
             >
               {persona.name}
+              {persona.id === 'business_advisor' && (
+                <span className="ml-2 inline-block bg-transparent border border-red-400 text-red-400 text-xs font-semibold px-2 py-0.5 rounded-full">
+                  HOT
+                </span>
+              )}
             </Button>
           ))}
         </div>

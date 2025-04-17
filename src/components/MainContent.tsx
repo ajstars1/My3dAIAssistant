@@ -31,7 +31,7 @@ const MainContent = memo(({ apiKey, wsUri }: MainContentProps) => {
 
             {/* UI Overlay - Title Banner */} 
             {/* Adjust positioning if needed, but centering relative to viewport might still be okay */}
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
+            {/* <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">
               <div 
                 className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg px-6 py-3 rotate-[-1deg] shadow-lg pointer-events-auto hover:rotate-[1deg] transition-all duration-300"
                 style={{ willChange: 'transform' }}
@@ -43,7 +43,7 @@ const MainContent = memo(({ apiKey, wsUri }: MainContentProps) => {
                   </h1>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

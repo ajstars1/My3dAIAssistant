@@ -1,6 +1,7 @@
 import './globals.css'
 import { Inter } from "next/font/google";
 import { Metadata, Viewport } from 'next';
+import { Analytics } from "@vercel/analytics/react"
 
 // Optimize font loading with display swap for better performance
 const inter = Inter({ 
@@ -45,7 +46,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://generativelanguage.googleapis.com" crossOrigin="anonymous" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>{children}
+        <Analytics/>
+      </body>
     </html>
   );
 }

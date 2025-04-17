@@ -102,5 +102,5 @@ export function decodeBase64ToArrayBuffer(base64: string): ArrayBuffer {
 
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }

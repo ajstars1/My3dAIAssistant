@@ -5,7 +5,6 @@ import {
 } from "../lib/multimodal-live-client";
 import { LiveConfig } from "../multimodal-live-types";
 import { AudioPlaybackStreamer } from "../lib/audio-streamer";
-import { getAudioContext } from "../lib/utils";
 import VolumeMeterProcessorSource from "../lib/worklets/vol-meter";
 
 export type UseLiveAPIResults = {
@@ -37,7 +36,9 @@ export function useLiveAPI({
   // register audio for streaming server -> speakers
   useEffect(() => {
     if (!audioStreamerRef.current) {
-      getAudioContext({ contextId: "audio-out" }).then((audioCtx: AudioContext) => {
+      try {
+        // Directly create AudioContext
+        const audioCtx = new AudioContext(); 
         audioStreamerRef.current = new AudioPlaybackStreamer(audioCtx);
         audioStreamerRef.current
           .registerWorklet<any>("vumeter-out", VolumeMeterProcessorSource, (ev: any) => {
@@ -49,12 +50,12 @@ export function useLiveAPI({
           })
           .then(() => {
             console.log("Volume meter worklet registered successfully.");
-          }).catch(error => {
+          }).catch((error: any) => {
             console.error("Failed to register volume meter worklet:", error);
           });
-      }).catch(error => {
-          console.error("Failed to get audio context:", error);
-      });
+      } catch (error: any) {
+          console.error("Failed to initialize audio context or streamer:", error);
+      }
     }
   }, [audioStreamerRef]);
 

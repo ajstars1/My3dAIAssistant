@@ -18,7 +18,7 @@ const ControlPanel = memo(({}: ControlPanelProps) => {
   const [audioRecorder] = useState(() => new MicrophoneProcessor());
   const [muted, setMuted] = useState(false);
   
-  const { client, connected, connect, disconnect, volume } = useLiveAPIContext();
+  const { client, connected, connect, disconnect } = useLiveAPIContext();
 
   // Handle microphone input
   useEffect(() => {
@@ -54,7 +54,7 @@ const ControlPanel = memo(({}: ControlPanelProps) => {
         <div className="visualizer-wrapper">
           <AudioVisualizer 
             active={connected} 
-            volume={volume} 
+            volume={inVolume} 
             hover={!muted} 
           />
         </div>

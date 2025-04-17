@@ -21,7 +21,7 @@ import {
   ToolResponseMessage,
   type LiveConfig,
 } from "../multimodal-live-types";
-import { convertBlobToJson, decodeBase64ToArrayBuffer } from "./utils";
+import { convertBlobToJson } from "./utils";
 
 /**
  * the events that this client will emit
@@ -201,7 +201,15 @@ export class MultimodalLiveClient extends EventEmitter<MultimodalLiveClientEvent
 
         base64s.forEach((b64) => {
           if (b64) {
-            const data = decodeBase64ToArrayBuffer(b64);
+            // Standard Base64 to ArrayBuffer decoding
+            const binaryString = atob(b64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            const data = bytes.buffer;
+            
             this.emit("audio", data);
             this.log(`server.audio`, `buffer (${data.byteLength})`);
           }

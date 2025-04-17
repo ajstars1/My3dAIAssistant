@@ -17,7 +17,7 @@ const nextConfig = {
     } : false,
   },
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
     scrollRestoration: true,
   },
   poweredByHeader: false,

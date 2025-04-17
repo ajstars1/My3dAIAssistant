@@ -150,6 +150,7 @@ const AITalkingMan = memo(() => {
   }, [configureModel]);
 
   // Throttled version of synthesizeSpeech to prevent multiple calls
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const throttledSynthesizeSpeech = useCallback(
     throttle(async (text: string): Promise<Blob> => {
       // Simulate TTS (replace with actual implementation)

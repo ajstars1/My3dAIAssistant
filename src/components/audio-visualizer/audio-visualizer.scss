@@ -1,0 +1,81 @@
+.audio-visualizer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0 4px;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+  
+  // Default state - inactive
+  &:not(.active) .visualizer-bar {
+    height: 3px !important;  // Override inline styles when inactive
+  }
+  
+  // Active state
+  &.active {
+    opacity: 1;
+  }
+  
+  // Hover animation
+  &.hover .visualizer-bar {
+    animation: float 1.2s infinite alternate ease-in-out;
+  }
+  
+  // Individual bars
+  .visualizer-bar {
+    width: 3px;
+    height: 5px;
+    border-radius: 3px;
+    transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: bottom;
+    
+    // Colors
+    background-color: #3b82f6; // Default blue
+  }
+  
+  // Color variations
+  &.color-primary .visualizer-bar {
+    background-color: #3b82f6; // Blue
+  }
+  
+  &.color-success .visualizer-bar {
+    background-color: #10b981; // Green
+  }
+  
+  &.color-danger .visualizer-bar {
+    background-color: #ef4444; // Red
+  }
+  
+  &.color-warning .visualizer-bar {
+    background-color: #f59e0b; // Amber
+  }
+  
+  &.color-purple .visualizer-bar {
+    background-color: #8b5cf6; // Purple
+  }
+}
+
+// Hover animation
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-6px);
+  }
+}
+
+// Pulse animation for active state
+@keyframes pulse {
+  0% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.2);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+} 

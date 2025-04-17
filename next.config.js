@@ -1,9 +1,26 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
 const path = require("path");
 
-module.exports = module.exports = {
-    sassOptions: {
-        includePaths: [path.join(__dirname, 'styles')],
-    }
-},nextConfig
+const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    dangerouslyAllowSVG: true,
+  },
+  sassOptions: {
+    includePaths: [path.join(__dirname, 'styles')],
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
+  experimental: {
+    optimizeCss: true,
+    scrollRestoration: true,
+  },
+  poweredByHeader: false,
+};
+
+module.exports = nextConfig;

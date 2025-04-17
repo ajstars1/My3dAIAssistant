@@ -1,86 +1,97 @@
-/**
- * Copyright 2024 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-export type GetAudioContextOptions = AudioContextOptions & {
-  id?: string;
+export type AudioContextConfig = AudioContextOptions & {
+  contextId?: string;
 };
 
-const map: Map<string, AudioContext> = new Map();
+const audioContextRegistry: Map<string, AudioContext> = new Map();
 
-export const audioContext: (
-  options?: GetAudioContextOptions,
+/**
+ * Retrieves or creates an AudioContext, ensuring user interaction has occurred.
+ */
+export const getAudioContext: (
+  options?: AudioContextConfig,
 ) => Promise<AudioContext> = (() => {
-  const didInteract = new Promise((res) => {
-    window.addEventListener("pointerdown", res, { once: true });
-    window.addEventListener("keydown", res, { once: true });
-  });
+  let interactionPromise: Promise<void> | null = null;
 
-  return async (options?: GetAudioContextOptions) => {
+  const ensureInteraction = () => {
+    if (!interactionPromise) {
+      interactionPromise = new Promise((resolve) => {
+        const resolveOnce = () => resolve();
+        window.addEventListener("pointerdown", resolveOnce, { once: true });
+        window.addEventListener("keydown", resolveOnce, { once: true });
+      });
+    }
+    return interactionPromise;
+  };
+
+  return async (options?: AudioContextConfig) => {
+    const contextId = options?.contextId;
+
+    if (contextId && audioContextRegistry.has(contextId)) {
+      const existingCtx = audioContextRegistry.get(contextId);
+      if (existingCtx && existingCtx.state !== "closed") {
+        return existingCtx;
+      }
+    }
+
     try {
-      const a = new Audio();
-      a.src =
-        "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-      await a.play();
-      if (options?.id && map.has(options.id)) {
-        const ctx = map.get(options.id);
-        if (ctx) {
-          return ctx;
-        }
+      // Attempt to create context directly (works after first interaction)
+      const newCtx = new AudioContext(options);
+      if (contextId) {
+        audioContextRegistry.set(contextId, newCtx);
       }
-      const ctx = new AudioContext(options);
-      if (options?.id) {
-        map.set(options.id, ctx);
-      }
-      return ctx;
+      return newCtx;
     } catch (e) {
-      await didInteract;
-      if (options?.id && map.has(options.id)) {
-        const ctx = map.get(options.id);
-        if (ctx) {
-          return ctx;
-        }
+      // If direct creation fails, wait for interaction
+      await ensureInteraction();
+      // Retry creation after interaction
+      const newCtx = new AudioContext(options);
+      if (contextId) {
+        audioContextRegistry.set(contextId, newCtx);
       }
-      const ctx = new AudioContext(options);
-      if (options?.id) {
-        map.set(options.id, ctx);
-      }
-      return ctx;
+      return newCtx;
     }
   };
 })();
 
-export const blobToJSON = (blob: Blob) =>
+/**
+ * Converts a Blob to a JSON object.
+ */
+export const convertBlobToJson = (blob: Blob): Promise<any> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      if (reader.result) {
-        const json = JSON.parse(reader.result as string);
-        resolve(json);
-      } else {
-        reject("oops");
+      try {
+        if (reader.result) {
+          const json = JSON.parse(reader.result as string);
+          resolve(json);
+        } else {
+          reject(new Error("FileReader result is null"));
+        }
+      } catch (error) {
+        reject(new Error(`Failed to parse Blob as JSON: ${error}`));
       }
+    };
+    reader.onerror = () => {
+      reject(new Error("FileReader error"));
     };
     reader.readAsText(blob);
   });
 
-export function base64ToArrayBuffer(base64: string) {
-  var binaryString = atob(base64);
-  var bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+/**
+ * Converts a base64 string to an ArrayBuffer.
+ */
+export function decodeBase64ToArrayBuffer(base64: string): ArrayBuffer {
+  try {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  } catch (e) {
+    console.error("Failed to decode base64 string:", e);
+    // Return an empty buffer or re-throw, depending on desired error handling
+    return new ArrayBuffer(0);
   }
-  return bytes.buffer;
 }

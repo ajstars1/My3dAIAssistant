@@ -1,43 +1,44 @@
 /**
- * Copyright 2024 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Describes the structure for managing an AudioWorkletNode and its message handlers.
  */
-
-/**
- * A registry to map attached worklets by their audio-context
- * any module using `audioContext.audioWorklet.addModule(` should register the worklet here
- */
-export type WorkletGraph = {
+export type AudioWorkletRegistration = {
   node?: AudioWorkletNode;
   handlers: Array<(this: MessagePort, ev: MessageEvent) => any>;
 };
 
-export const registeredWorklets: Map<
+/**
+ * A map storing registered AudioWorklet instances per AudioContext.
+ * Key: AudioContext instance
+ * Value: Record mapping worklet names to their registration details.
+ */
+export const audioWorkletRegistry: Map<
   AudioContext,
-  Record<string, WorkletGraph>
+  Record<string, AudioWorkletRegistration>
 > = new Map();
 
-export const createWorketFromSrc = (
+/**
+ * Creates a Blob URL from a JavaScript string containing an AudioWorkletProcessor class definition.
+ * This URL can be used with `audioContext.audioWorklet.addModule()`.
+ *
+ * @param workletName - The name to register the processor with (e.g., "my-processor").
+ * @param workletSource - A string containing the JavaScript code for the AudioWorkletProcessor class.
+ * @returns A Blob URL representing the worklet script.
+ */
+export const createWorkletScriptUrl = (
   workletName: string,
-  workletSrc: string,
-) => {
-  const script = new Blob(
-    [`registerProcessor("${workletName}", ${workletSrc})`],
-    {
+  workletSource: string,
+): string => {
+  if (!workletName || !workletSource) {
+    throw new Error("Worklet name and source must be provided.");
+  }
+  try {
+    const scriptContent = `registerProcessor("${workletName}", ${workletSource})`;
+    const scriptBlob = new Blob([scriptContent], {
       type: "application/javascript",
-    },
-  );
-
-  return URL.createObjectURL(script);
+    });
+    return URL.createObjectURL(scriptBlob);
+  } catch (error) {
+    console.error(`Failed to create worklet script URL for ${workletName}:`, error);
+    throw new Error(`Failed to create worklet script URL: ${error}`);
+  }
 };

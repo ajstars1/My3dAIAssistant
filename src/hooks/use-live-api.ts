@@ -1,28 +1,12 @@
-/**
- * Copyright 2024 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   MultimodalLiveAPIClientConnection,
   MultimodalLiveClient,
 } from "../lib/multimodal-live-client";
 import { LiveConfig } from "../multimodal-live-types";
-import { AudioStreamer } from "../lib/audio-streamer";
-import { audioContext } from "../lib/utils";
-import VolMeterWorket from "../lib/worklets/vol-meter";
+import { AudioPlaybackStreamer } from "../lib/audio-streamer";
+import { getAudioContext } from "../lib/utils";
+import VolumeMeterProcessorSource from "../lib/worklets/vol-meter";
 
 export type UseLiveAPIResults = {
   client: MultimodalLiveClient;
@@ -42,7 +26,7 @@ export function useLiveAPI({
     () => new MultimodalLiveClient({ url, apiKey }),
     [url, apiKey],
   );
-  const audioStreamerRef = useRef<AudioStreamer | null>(null);
+  const audioStreamerRef = useRef<AudioPlaybackStreamer | null>(null);
 
   const [connected, setConnected] = useState(false);
   const [config, setConfig] = useState<LiveConfig>({
@@ -53,15 +37,23 @@ export function useLiveAPI({
   // register audio for streaming server -> speakers
   useEffect(() => {
     if (!audioStreamerRef.current) {
-      audioContext({ id: "audio-out" }).then((audioCtx: AudioContext) => {
-        audioStreamerRef.current = new AudioStreamer(audioCtx);
+      getAudioContext({ contextId: "audio-out" }).then((audioCtx: AudioContext) => {
+        audioStreamerRef.current = new AudioPlaybackStreamer(audioCtx);
         audioStreamerRef.current
-          .addWorklet<any>("vumeter-out", VolMeterWorket, (ev: any) => {
-            setVolume(ev.data.volume);
+          .registerWorklet<any>("vumeter-out", VolumeMeterProcessorSource, (ev: any) => {
+            if (ev && typeof ev.volume === 'number') {
+                setVolume(ev.volume);
+            } else {
+                console.warn("Received unexpected volume data format:", ev);
+            }
           })
           .then(() => {
-            // Successfully added worklet
+            console.log("Volume meter worklet registered successfully.");
+          }).catch(error => {
+            console.error("Failed to register volume meter worklet:", error);
           });
+      }).catch(error => {
+          console.error("Failed to get audio context:", error);
       });
     }
   }, [audioStreamerRef]);
@@ -71,11 +63,18 @@ export function useLiveAPI({
       setConnected(false);
     };
 
-    const stopAudioStreamer = () => audioStreamerRef.current?.stop();
+    const stopAudioStreamer = () => audioStreamerRef.current?.stopPlayback();
 
-    const onAudio = (data: ArrayBuffer) =>
-      audioStreamerRef.current?.addPCM16(new Uint8Array(data));
-
+    const onAudio = (data: ArrayBuffer) => {
+        if (audioStreamerRef.current) {
+            try {
+                 audioStreamerRef.current.addPcmChunk(new Uint8Array(data));
+            } catch (e) {
+                console.error("Error adding PCM chunk:", e);
+            }
+        }
+    }
+      
     client
       .on("close", onClose)
       .on("interrupted", stopAudioStreamer)
@@ -90,18 +89,29 @@ export function useLiveAPI({
   }, [client]);
 
   const connect = useCallback(async () => {
-    console.log(config);
+    console.log("Connecting with config:", config);
     if (!config) {
-      throw new Error("config has not been set");
+      throw new Error("Configuration has not been set before connecting.");
     }
-    client.disconnect();
-    await client.connect(config);
-    setConnected(true);
+    try {
+        client.disconnect();
+        await client.connect(config);
+        setConnected(true);
+        console.log("Successfully connected.");
+    } catch (error) {
+        console.error("Connection failed:", error);
+        setConnected(false);
+    }
   }, [client, setConnected, config]);
 
   const disconnect = useCallback(async () => {
-    client.disconnect();
-    setConnected(false);
+      try {
+        client.disconnect();
+        setConnected(false);
+        console.log("Successfully disconnected.");
+      } catch (error) {
+          console.error("Error during disconnection:", error);
+      }
   }, [setConnected, client]);
 
   return {

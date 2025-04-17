@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback, memo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { type FunctionDeclaration, SchemaType } from "@google/generative-ai";
 import { useLiveAPIContext } from "@/contexts/LiveAPIContext";
 import { TalkingManModel } from "../model/TalkingManModel";
 
+// Define the function declaration once outside component to prevent recreation on renders
 const declaration: FunctionDeclaration = {
   name: "generate_audio_response",
   description: "Generates an audio response based on user input.",
@@ -22,20 +23,52 @@ const declaration: FunctionDeclaration = {
   },
 };
 
-export default function AITalkingMan() {
-  // const [isListening, setIsListening] = useState(false);
+// Create a throttled version of synthesizeSpeech to prevent multiple calls
+const throttle = <T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): ((...args: Parameters<T>) => Promise<ReturnType<T>>) => {
+  let lastCall = 0;
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  return async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+    const now = Date.now();
+    const timeSinceLastCall = now - lastCall;
+
+    if (timeSinceLastCall >= delay) {
+      lastCall = now;
+      return func(...args);
+    }
+
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    return new Promise((resolve) => {
+      timeoutId = setTimeout(() => {
+        lastCall = Date.now();
+        resolve(func(...args));
+        timeoutId = null;
+      }, delay - timeSinceLastCall);
+    });
+  };
+};
+
+// Memoized component for better performance
+const AITalkingMan = memo(() => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { client, setConfig, connected, connect, disconnect } = useLiveAPIContext();
+  const { client, setConfig, connected, connect } = useLiveAPIContext();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Configure model
-  useEffect(() => {
-   setConfig({
-     model: "models/gemini-2.0-flash-live-001",
-     systemInstruction: {
-       parts: [
-         {
-           text: `You are a helpful AI assistant, specifically a 3D model assistant integrated into an XR Business Card created by Ayush Jamwal. You are modified by Ayush to tell others about him.
+  // Configure model using useCallback to prevent unnecessary recreations
+  const configureModel = useCallback(() => {
+    setConfig({
+      model: "models/gemini-2.0-flash-live-001",
+      systemInstruction: {
+        parts: [
+          {
+            text: `You are a helpful AI assistant, specifically a 3D model assistant integrated into an XR Business Card created by Ayush Jamwal. You are modified by Ayush to tell others about him.
           
           Here is information about **Ayush Jamwal** also known as ajstars (Your Creator):
 
@@ -104,26 +137,29 @@ export default function AITalkingMan() {
           *   You can also provide information about **0Unveiled** if asked, summarizing its purpose and key features.
           *   Always call the "generate_audio_response" function with your response.
           `,
-         },
-       ],
-     },
-     tools: [{ functionDeclarations: [declaration] }],
-   });
-    // setConfig({
-    //   model: "models/gemini-2.0-flash-exp",
-    //   systemInstruction: {
-    //     parts: [
-    //       {
-    //         text: 'You are a helpful AI assistant. When I speak to you, respond concisely and call the "generate_audio_response" function with your response. If someone asks anything about "Ayush", provide relevant information. Ayush Jamwal is a Senior Frontend Engineer with over 3 years of experience in scalable web applications. He is the Founder and Tech Lead of 0Unveiled, a skill-based collaboration platform for students, launched on January 2, 2025. He has expertise in full-stack development, frontend frameworks like React.js, Next.js, and backend technologies such as Prisma, Supabase, and PostgreSQL. Ayush also created an innovative XR Business Card using WebXR and AI. He has won 1st Prize at the J&K Startup Conclave 2024 and completed a web development internship at IIT Jammu. In addition to his technical skills, he excels in leadership, problem-solving, and team building.',
-    //       },
-    //     ],
-    //   },
-    //   tools: [{ functionDeclarations: [declaration] }],
-    // });
-
+          },
+        ],
+      },
+      tools: [{ functionDeclarations: [declaration] }],
+    });
   }, [setConfig]);
 
-  // Handle AI responses and animations
+  // Set up model configuration on mount
+  useEffect(() => {
+    configureModel();
+  }, [configureModel]);
+
+  // Throttled version of synthesizeSpeech to prevent multiple calls
+  const throttledSynthesizeSpeech = useCallback(
+    throttle(async (text: string): Promise<Blob> => {
+      // Simulate TTS (replace with actual implementation)
+      await new Promise((resolve) => setTimeout(resolve, text.length * 50));
+      return new Blob([""], { type: "audio/mpeg" });
+    }, 300),
+    []
+  );
+
+  // Handle AI responses and animations with optimized event handling
   useEffect(() => {
     let animationTimeout: NodeJS.Timeout;
 
@@ -136,7 +172,7 @@ export default function AITalkingMan() {
       // Add a small delay before stopping animation to account for any audio playback
       animationTimeout = setTimeout(() => {
         setIsPlaying(false);
-      }, 500); // Adjust timeout as needed
+      }, 500);
     };
 
     const onAudio = () => {
@@ -153,21 +189,30 @@ export default function AITalkingMan() {
       const fc = toolCall.functionCalls.find(
         (fc: any) => fc.name === declaration.name
       );
+      
       if (fc) {
         setIsPlaying(true);
         const responseText = (fc.args as any).response_text;
         console.log("AI Response:", responseText);
 
-        // Simulate TTS duration or integrate with actual TTS
         try {
-          const audioBlob = await synthesizeSpeech(responseText);
+          // Clean up previous audio element if exists
+          if (audioRef.current) {
+            audioRef.current.pause();
+            URL.revokeObjectURL(audioRef.current.src);
+          }
+
+          const audioBlob = await throttledSynthesizeSpeech(responseText);
           const audioUrl = URL.createObjectURL(audioBlob);
+          
           const audio = new Audio(audioUrl);
+          audioRef.current = audio;
           
           audio.onplay = () => setIsPlaying(true);
           audio.onended = () => {
             setIsPlaying(false);
             URL.revokeObjectURL(audioUrl);
+            audioRef.current = null;
           };
           
           await audio.play();
@@ -186,36 +231,49 @@ export default function AITalkingMan() {
       .on("audio", onAudio)
       .on("toolcall", onToolCall);
 
-    // Cleanup
+    // Cleanup - important for preventing memory leaks
     return () => {
       if (animationTimeout) {
         clearTimeout(animationTimeout);
       }
+      
+      // Clean up audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        URL.revokeObjectURL(audioRef.current.src);
+      }
+      
+      // Remove event listeners
       client
         .off("content", onContent)
         .off("turncomplete", onTurnComplete)
         .off("audio", onAudio)
         .off("toolcall", onToolCall);
     };
-  }, [client]);
+  }, [client, throttledSynthesizeSpeech]);
 
-  // Rest of your component code...
   return (
     <div className="relative w-full h-screen">
-      <Canvas camera={{ position: [0, 1.5, 3] }}>
+      <Canvas 
+        camera={{ position: [0, 1.5, 3] }}
+        dpr={[1, 2]} // Optimize for different device pixel ratios
+        performance={{ min: 0.5 }} // Allow performance scaling for slower devices
+      >
         <ambientLight intensity={1} />
         <pointLight position={[10, 10, 10]} />
         <TalkingManModel play={isPlaying} />
-        <OrbitControls  />
+        <OrbitControls enableDamping dampingFactor={0.2} />
       </Canvas>
-      {/* ... rest of your UI components ... */}
+      
+      {error && (
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md">
+          {error}
+        </div>
+      )}
     </div>
   );
-}
+});
 
-// Helper function for TTS (replace with actual implementation)
-async function synthesizeSpeech(text: string): Promise<Blob> {
-  // Implement your text-to-speech logic here
-  await new Promise((resolve) => setTimeout(resolve, text.length * 50));
-  return new Blob([""], { type: "audio/mpeg" });
-}
+AITalkingMan.displayName = 'AITalkingMan';
+
+export default AITalkingMan;

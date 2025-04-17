@@ -217,8 +217,8 @@ const AITalkingMan = memo(() => {
           
           await audio.play();
         } catch (error) {
-          console.error("TTS Error:", error);
-          setError("Failed to synthesize speech.");
+          // console.error("TTS Error:", error);
+          // setError("Failed to synthesize speech.");
           setIsPlaying(false);
         }
       }

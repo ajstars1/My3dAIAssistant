@@ -1,11 +1,12 @@
 'use client';
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import ControlPanel from '@/components/control-panel/ControlPanel';
 import AITalkingMan from '@/components/pageRender';
 import PersonaSidebar from '@/components/PersonaSidebar';
 import "../app/App.scss";
 import { LiveAPIProvider } from '@/contexts/LiveAPIContext';
-import { Bot } from 'lucide-react';
+import { Bot, Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface MainContentProps {
   apiKey: string;
@@ -13,14 +14,28 @@ interface MainContentProps {
 }
 
 const MainContent = memo(({ apiKey, wsUri }: MainContentProps) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <LiveAPIProvider url={wsUri} apiKey={apiKey}>
       <div className="relative min-h-screen bg-black flex">
-        {/* Sidebar - Fixed position */} 
-        <PersonaSidebar />
+        {/* Pass state and toggle function to sidebar */}
+        <PersonaSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-        {/* Main Content Area - Padded left to make space for the sidebar */} 
-        <div className="flex-grow pl-64"> {/* Add padding-left equal to sidebar width */} 
+        {/* Main Content Area - Padded left only on medium screens and up */} 
+        <div className="flex-grow md:pl-64 relative"> {/* Added relative positioning */} 
+          {/* Hamburger Menu Button - Visible only on mobile */} 
+          {!isSidebarOpen && (
+            <Button 
+             variant="ghost"
+             size="icon"
+             className="absolute top-4 left-4 text-white md:hidden z-50" // Positioned top-left, mobile only, high z-index
+             onClick={() => setIsSidebarOpen(true)}
+          >
+              <Menu className="h-6 w-6" />
+            </Button>
+          )}
+
           <div className="relative h-screen"> {/* Use h-screen for full height */} 
             {/* Canvas Content */} 
             <div className="absolute inset-0 flex items-center justify-center"> {/* Center canvas within this padded area */} 

@@ -10,16 +10,26 @@ const inter = Inter({
   preload: false,
 });
 
+// Updated Metadata for SEO - Focused on Interactive Personas
 export const metadata: Metadata = {
-  title: "AJ Stars' AI assistant demo",
-  description: 'This is a demo of an AI assistant that can generate text and speak it out loud and tell you everything about aj stars and also help you with your homework. It is a real world Jarvis.',
-  keywords: ['AI', 'Assistant', 'AJ Stars', 'Real World Jarvis', 'Speech', 'Gemini 2.0', 'Gemini'],
-  metadataBase: new URL('https://ajstars.in'),
+  title: "Interactive 3D AI Personas | Three.js & Next.js Powered Avatars",
+  description: "Create and interact with realistic 3D AI personas for business, education, or entertainment. Powered by Three.js, Next.js, and advanced AI.",
+  keywords: ['AI Persona', 'Interactive AI', '3D Avatar', 'Business AI', 'Digital Human', 'Three.js', 'Next.js', 'Web AI', 'Conversational AI', 'Virtual Assistant', 'AI Chatbot', 'Gemini'],
+  metadataBase: new URL('https://ajstars.in'), // Base URL remains for canonical linking
   openGraph: {
-    title: "AJ Stars' AI Assistant",
-    description: 'AI assistant that speaks and provides information about AJ Stars',
-    siteName: 'AJ Stars',
+    title: "Interactive 3D AI Personas & Avatars",
+    description: "Explore engaging 3D AI personas built with cutting-edge web technologies (Three.js, Next.js). Ideal for business and interactive applications.",
+    siteName: 'AI Persona Showcase', // Changed site name for broader appeal
     type: 'website',
+    // Optional: Add a relevant image URL for social sharing
+    // images: [
+    //   {
+    //     url: 'https://your-domain.com/og-persona-image.png', 
+    //     width: 1200,
+    //     height: 630,
+    //     alt: 'Interactive 3D AI Persona Demo',
+    //   },
+    // ],
   },
 }
 

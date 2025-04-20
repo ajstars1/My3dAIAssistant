@@ -3,6 +3,7 @@ import React, { memo, useState } from 'react';
 import ControlPanel from '@/components/control-panel/ControlPanel';
 import AITalkingMan from '@/components/pageRender';
 import PersonaSidebar from '@/components/PersonaSidebar';
+import ContactBubble from '@/components/ContactBubble';
 import "../app/App.scss";
 import { LiveAPIProvider } from '@/contexts/LiveAPIContext';
 import { Bot, Menu } from 'lucide-react';
@@ -64,6 +65,8 @@ const MainContent = memo(({ apiKey, wsUri }: MainContentProps) => {
       </div>
       {/* Control panel - Placed outside the main flex container, might need position review */}
       <ControlPanel />
+      {/* Add the Contact Bubble here */}
+      <ContactBubble />
     </LiveAPIProvider>
   );
 });
